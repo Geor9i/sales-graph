@@ -59,25 +59,6 @@ export default class Emitter {
     });
   }
 
-  drawZoomBoundary() {
-    ctx.beginPath();
-    ctx.lineWidth = 1;
-    this.zoomBoundary = {
-      ...this.zoomBoundary,
-      x: this.mouseX - this.zoomBoundary.width / 2,
-      y: this.mouseY - this.zoomBoundary.height / 2,
-    };
-
-    ctx.rect(
-      this.zoomBoundary.x,
-      this.zoomBoundary.y,
-      this.zoomBoundary.width,
-      this.zoomBoundary.height
-    );
-    ctx.stroke();
-    ctx.closePath();
-  }
-
   create(salesData) {
     const salesDataArr = Array.from(salesData);
     this.starterData(salesDataArr);
@@ -105,19 +86,18 @@ export default class Emitter {
   }
 
   zoom() {
-      this.particles.forEach((data, i) => {
+    const zoomIncrement = this.scroll.direction * this.zoomSpeed;
+
+    // Adjust the positions of particles based on zoom direction and speed
+    this.particles.forEach((data, i) => {
         const [sales, particle] = data;
         const distanceX = particle.x - this.mouseX;
         const directionX = Math.sign(distanceX) * this.scroll.direction;
-        const directionSpeed = distanceX * 0.02;
+        const directionSpeed = Math.abs(distanceX) * 0.2; // Use absolute distance to ensure symmetrical movement
         const newX = particle.x + (directionX * directionSpeed);
         particle.x = newX;
-        if (i === 37) {
-          console.log(directionX);
-        }
-      });
-  
-  }
+    });
+}
 
   animate() {
     requestAnimationFrame(this.animate.bind(this));
@@ -130,6 +110,5 @@ export default class Emitter {
       }
       // particle.update(this.getParticleProps())
     });
-    this.drawZoomBoundary();
   }
 }
