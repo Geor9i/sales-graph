@@ -27,7 +27,7 @@ export default class Emitter {
       value: 0,
     };
     this.maxZoom = 30;
-    this.zoomSpeed = 10;
+    this.zoomSpeed = 0.1;
     this.zoomBoundary = {
       x: 0,
       y: 0,
@@ -53,37 +53,36 @@ export default class Emitter {
       this.mouseX = e.offsetX;
       this.mouseY = e.offsetY;
       if (this.mouseDown) {
-        this.dragParticles()
+        this.dragParticles();
       }
     });
 
     canvas.addEventListener("wheel", (e) => {
       const scrollIncrement = e.deltaY < 0 ? 1 : -1;
-        this.scroll = {
-          direction: scrollIncrement,
-          isActive: true,
-          value: this.scroll.value + scrollIncrement
-        };
+      this.scroll = {
+        direction: scrollIncrement,
+        isActive: true,
+        value: this.scroll.value + scrollIncrement,
+      };
     });
 
-    canvas.addEventListener('mousedown', (e) => {
+    canvas.addEventListener("mousedown", (e) => {
       this.mouseDown = true;
-    })
+    });
 
-    canvas.addEventListener('mouseup', () => {
+    canvas.addEventListener("mouseup", () => {
       this.mouseDown = false;
-    })
+    });
   }
 
   create(salesData) {
     const salesDataArr = Array.from(salesData);
     this.starterData(salesDataArr);
-    salesDataArr.forEach((day) => {
-      const { salesTotal, transactionsTotal } = day[1];
+    salesDataArr.forEach(([date, { salesTotal, transactionsTotal }]) => {
       const particle = new this.particleClass(
         this.getParticleProps(salesTotal)
       );
-      this.particles.push([salesTotal, particle]);
+      this.particles.push([{ date, salesTotal, transactionsTotal }, particle]);
     });
   }
 
@@ -102,32 +101,29 @@ export default class Emitter {
   }
 
   zoom() {
-    const zoomIncrement = this.scroll.direction * this.zoomSpeed;
-    // Adjust the positions of particles based on zoom direction and speed
     this.particles.forEach((data, i) => {
-        const [sales, particle] = data;
-        const distanceX = particle.x - this.mouseX;
-        const directionX = Math.sign(distanceX) * this.scroll.direction;
-        const directionSpeed = Math.abs(distanceX) * 0.2; // Use absolute distance to ensure symmetrical movement
-        const newX = particle.x + (directionX * directionSpeed);
-        particle.x = newX;
+      const [salesData, particle] = data;
+      const distanceX = particle.x - this.mouseX;
+      const directionX = Math.sign(distanceX) * this.scroll.direction;
+      const directionSpeed = Math.abs(distanceX) * this.zoomSpeed; // Remove Math abs for a parallax effect
+      particle.x = particle.x + directionX * directionSpeed;
     });
-}
+  }
 
-dragParticles() {
-  const deltaX = this.mouseX - this.oldMouseX; // Calculate the change in mouse position since the click
-  const deltaY = this.mouseY - this.oldMouseY; // Calculate the change in mouse position since the click
-  this.particles.forEach(data => {
-      const [sales, particle] = data;
+  dragParticles() {
+    const deltaX = this.mouseX - this.oldMouseX; // Calculate the change in mouse position since the click
+    const deltaY = this.mouseY - this.oldMouseY; // Calculate the change in mouse position since the click
+    this.particles.forEach((data) => {
+      const [salesData, particle] = data;
       particle.x += deltaX; // Update the particle's x-coordinate
       particle.y += deltaY; // Update the particle's x-coordinate
-  });
-}
+    });
+  }
 
   animate() {
     requestAnimationFrame(this.animate.bind(this));
     ctx.clearRect(0, 0, innerWidth, innerHeight);
-    this.particles.forEach(([salesTotal, particle]) => {
+    this.particles.forEach(([salesData, particle]) => {
       particle.draw();
       if (this.scroll.isActive) {
         this.scroll.isActive = false;
