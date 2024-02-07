@@ -17,7 +17,10 @@ export default class Emitter {
     };
     this.graphTopSales = 0;
     this.mouseX = 0;
+    this.oldMouseX = 0;
     this.mouseY = 0;
+    this.oldMouseY = 0;
+    this.mouseDown = false;
     this.scroll = {
       direction: null,
       isActive: false,
@@ -45,8 +48,13 @@ export default class Emitter {
 
   mouseEvents() {
     canvas.addEventListener("mousemove", (e) => {
+      this.oldMouseX = this.mouseX;
+      this.oldMouseY = this.mouseY;
       this.mouseX = e.offsetX;
       this.mouseY = e.offsetY;
+      if (this.mouseDown) {
+        this.dragParticles()
+      }
     });
 
     canvas.addEventListener("wheel", (e) => {
@@ -57,6 +65,14 @@ export default class Emitter {
           value: this.scroll.value + scrollIncrement
         };
     });
+
+    canvas.addEventListener('mousedown', (e) => {
+      this.mouseDown = true;
+    })
+
+    canvas.addEventListener('mouseup', () => {
+      this.mouseDown = false;
+    })
   }
 
   create(salesData) {
@@ -87,7 +103,6 @@ export default class Emitter {
 
   zoom() {
     const zoomIncrement = this.scroll.direction * this.zoomSpeed;
-
     // Adjust the positions of particles based on zoom direction and speed
     this.particles.forEach((data, i) => {
         const [sales, particle] = data;
@@ -97,6 +112,16 @@ export default class Emitter {
         const newX = particle.x + (directionX * directionSpeed);
         particle.x = newX;
     });
+}
+
+dragParticles() {
+  const deltaX = this.mouseX - this.oldMouseX; // Calculate the change in mouse position since the click
+  const deltaY = this.mouseY - this.oldMouseY; // Calculate the change in mouse position since the click
+  this.particles.forEach(data => {
+      const [sales, particle] = data;
+      particle.x += deltaX; // Update the particle's x-coordinate
+      particle.y += deltaY; // Update the particle's x-coordinate
+  });
 }
 
   animate() {
