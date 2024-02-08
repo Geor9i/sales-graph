@@ -8,7 +8,7 @@ export default class Emitter {
     this.particles = [];
     this.particleSpacing = 0;
     this.particleWidth = 12;
-    this.particleHeight = 100;
+    this.particleHeight = 200;
     this.particle = {
       x: 0,
       y: this.getParticleHeight(),
@@ -27,7 +27,7 @@ export default class Emitter {
     };
     this.zoomFactor = 0;
     this.maxZoom = 30;
-    this.zoomSpeed = 0.1;
+    this.zoomSpeed = 0.05;
     this.mouseEvents();
   }
 
@@ -125,9 +125,13 @@ export default class Emitter {
       this.particles.forEach((data, i) => {
         const [salesData, particle] = data;
         const distanceX = particle.x - this.mouseX;
+        const distanceY = particle.y - this.mouseY;
         const scaledDistanceX = distanceX * zoomChange;
+        const scaledDistanceY = distanceY * zoomChange;
         particle.x = this.mouseX + scaledDistanceX;
         particle.width *= zoomChange;
+        // particle.y = this.mouseY + scaledDistanceY;
+        // particle.height *= zoomChange;
       });
     }
   }
