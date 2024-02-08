@@ -7,10 +7,11 @@ export default class Emitter {
     this.particleClass = particleClass;
     this.particles = [];
     this.particleSpacing = 10;
+    this.particleWidth = 5;
     this.particle = {
       x: 0,
       y: this.canvas.height - 150,
-      width: 5,
+      width: this.particleWidth,
       height: 150,
       color: "blue",
       stroke: false,
@@ -26,6 +27,7 @@ export default class Emitter {
       isActive: false,
       value: 0,
     };
+    this.zoomFactor = 0;
     this.maxZoom = 30;
     this.zoomSpeed = 0.1;
     this.zoomBoundary = {
@@ -101,13 +103,26 @@ export default class Emitter {
   }
 
   zoom() {
-    this.particles.forEach((data, i) => {
-      const [salesData, particle] = data;
-      const distanceX = particle.x - this.mouseX;
-      const directionX = Math.sign(distanceX) * this.scroll.direction;
-      const directionSpeed = Math.abs(distanceX) * this.zoomSpeed; // Remove Math abs for a parallax effect
-      particle.x = particle.x + directionX * directionSpeed;
-    });
+    if (
+      (this.scroll.direction > 0 && this.zoomFactor < this.maxZoom) ||
+      (this.scroll.direction < 0 && this.zoomFactor > 0)
+    ) {
+      const oldZoomFactor = this.zoomFactor;
+      this.zoomFactor += this.scroll.direction;
+
+      const zoomRatio = Math.exp(this.zoomFactor * this.zoomSpeed);
+      const oldZoomRatio = Math.exp(oldZoomFactor * this.zoomSpeed);
+      // Calculate the change in zoom ratio
+      const zoomChange = zoomRatio / oldZoomRatio;
+      console.log(zoomChange);
+      this.particles.forEach((data, i) => {
+        const [salesData, particle] = data;
+        const distanceX = particle.x - this.mouseX;
+        const scaledDistanceX = distanceX * zoomChange;
+        particle.x = this.mouseX + scaledDistanceX;
+        particle.width *= zoomChange;
+      });
+    }
   }
 
   dragParticles() {
