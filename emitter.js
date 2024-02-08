@@ -3,16 +3,16 @@ import { canvas, ctx } from "./salesGraphConfig.js";
 export default class Emitter {
   constructor(canvas, ctx, particleClass) {
     this.canvas = canvas;
+    console.log('CanvasHeight :', this.canvas.height);
     this.ctx = ctx;
     this.particleClass = particleClass;
     this.particles = [];
-    this.particleSpacing = 10;
-    this.particleWidth = 5;
+    this.particleSpacing = 20;
+    this.particleWidth = 10;
+    this.particleHeight = 200;
     this.particle = {
       x: 0,
-      y: this.canvas.height - 150,
-      width: this.particleWidth,
-      height: 150,
+      y: this.canvas.height - ((this.canvas.height - this.particleHeight) / 2),
       color: "blue",
       stroke: false,
     };
@@ -42,7 +42,8 @@ export default class Emitter {
   getParticleProps(salesTotal) {
     const result = {
       ...this.particle,
-      height: -(salesTotal / this.graphTopSales) * 200,
+      height: -(salesTotal / this.graphTopSales) * this.particleHeight,
+      width: this.particleWidth,
     };
     this.particle.x += this.particleSpacing;
     return result;
@@ -54,6 +55,14 @@ export default class Emitter {
       this.oldMouseY = this.mouseY;
       this.mouseX = e.offsetX;
       this.mouseY = e.offsetY;
+      if (
+        this.mouseX < 0 ||
+        this.mouseX > canvas.width ||
+        this.mouseY < 0 ||
+        this.mouseY > canvas.height
+      ) {
+        return
+      }
       if (this.mouseDown) {
         this.dragParticles();
       }
@@ -72,7 +81,7 @@ export default class Emitter {
       this.mouseDown = true;
     });
 
-    canvas.addEventListener("mouseup", () => {
+    window.addEventListener("mouseup", () => {
       this.mouseDown = false;
     });
   }
