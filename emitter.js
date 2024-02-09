@@ -7,7 +7,7 @@ export default class Emitter {
     this.particleClass = particleClass;
     this.particles = [];
     this.particleSpacing = 0;
-    this.particleWidth = 12;
+    this.particleWidth = 10;
     this.particleHeight = 200;
     this.particle = {
       x: 0,
@@ -91,9 +91,8 @@ export default class Emitter {
       this.particleSpacing = this.canvas.width / salesDataArr.length;
     }
     salesDataArr.forEach(([date, { salesTotal, transactionsTotal }]) => {
-      const particle = new this.particleClass(
-        this.getParticleProps(salesTotal, topSales)
-      );
+      const particle = new this.particleClass('rect');
+      particle.particleProps(this.getParticleProps(salesTotal, topSales))
       this.particles.push([{ date, salesTotal, transactionsTotal }, particle]);
     });
   }
