@@ -5,5 +5,5 @@ import { salesData } from "./salesData.js";
 
 const emitter = new Emitter(canvas, ctx, Particle);
 
-emitter.create(salesData);
+emitter.init(salesData);
 emitter.animate();

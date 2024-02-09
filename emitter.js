@@ -36,7 +36,7 @@ export default class Emitter {
     return this.canvas.height - (this.canvas.height - maxHeight) / 2;
   }
 
-  getParticleProps(salesTotal, topSales) {
+  saleLineProps(salesTotal, topSales) {
     const maxHeight = Math.min(this.canvas.height, this.particleHeight);
     const result = {
       ...this.particle,
@@ -84,7 +84,7 @@ export default class Emitter {
     });
   }
 
-  create(salesData) {
+  init(salesData) {
     const salesDataArr = Array.from(salesData);
     const topSales = this.starterData(salesDataArr);
     if (this.particleSpacing === 0) {
@@ -92,7 +92,7 @@ export default class Emitter {
     }
     salesDataArr.forEach(([date, { salesTotal, transactionsTotal }]) => {
       const particle = new this.particleClass('rect');
-      particle.particleProps(this.getParticleProps(salesTotal, topSales))
+      particle.particleProps(this.saleLineProps(salesTotal, topSales))
       this.particles.push([{ date, salesTotal, transactionsTotal }, particle]);
     });
   }
@@ -154,7 +154,6 @@ export default class Emitter {
         this.scroll.isActive = false;
         this.zoom();
       }
-      // particle.update(this.getParticleProps())
     });
   }
 }
