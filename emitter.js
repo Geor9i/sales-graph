@@ -1,20 +1,18 @@
 import { canvas, ctx } from "./salesGraphConfig.js";
+import { Util } from "./util.js";
 
 export default class Emitter {
   constructor(canvas, ctx, particleClass) {
+    this.util = new Util();
     this.canvas = canvas;
     this.ctx = ctx;
     this.particleClass = particleClass;
-    this.particles = [];
-    this.particleSpacing = 0;
-    this.particleWidth = 10;
-    this.particleHeight = 200;
-    this.particle = {
-      x: 0,
-      y: this.getParticleHeight(),
-      color: "blue",
-      stroke: false,
-    };
+    this.particles = {};
+    this.lineSpacing = 0;
+    this.lineWidth = 5;
+    this.lineHeight = 200;
+    this.lineX = 0;
+    this.graphColor = "blue";
     this.mouseX = 0;
     this.oldMouseX = 0;
     this.mouseY = 0;
@@ -31,20 +29,34 @@ export default class Emitter {
     this.mouseEvents();
   }
 
-  getParticleHeight() {
-    const maxHeight = Math.min(this.canvas.height, this.particleHeight);
+  getLineY() {
+    const maxHeight = Math.min(this.canvas.height, this.lineHeight);
     return this.canvas.height - (this.canvas.height - maxHeight) / 2;
   }
 
-  saleLineProps(salesTotal, topSales) {
-    const maxHeight = Math.min(this.canvas.height, this.particleHeight);
+  salesGraphLineProps(salesTotal, topSales) {
+    const maxHeight = Math.min(this.canvas.height, this.lineHeight);
     const result = {
-      ...this.particle,
+      x: this.lineX,
+      y: this.getLineY(),
+      color: this.graphColor,
+      stroke: false,
       height: -(salesTotal / topSales) * maxHeight,
-      width: this.particleWidth,
+      width: this.lineWidth,
     };
-    this.particle.x += this.particleSpacing;
+    this.lineX += this.lineSpacing;
     return result;
+  }
+
+  salesGraphDateProps(date) {
+    return {
+      fontSize: '16px',
+      fontFamily: 'Arial',
+      textMessage: `${this.util.getDate(date)}`,
+      x: this.lineX,
+      y: this.getLineY(),
+      color: 'green'
+    }
   }
 
   mouseEvents() {
@@ -86,18 +98,28 @@ export default class Emitter {
 
   init(salesData) {
     const salesDataArr = Array.from(salesData);
-    const topSales = this.starterData(salesDataArr);
-    if (this.particleSpacing === 0) {
-      this.particleSpacing = this.canvas.width / salesDataArr.length;
+    const topSales = this.getHighestSales(salesDataArr);
+    if (this.lineSpacing === 0) {
+      this.lineSpacing = this.canvas.width / salesDataArr.length;
     }
+    this.particles.salesLines = [];
+    this.particles.dates = [];
     salesDataArr.forEach(([date, { salesTotal, transactionsTotal }]) => {
-      const particle = new this.particleClass('rect');
-      particle.particleProps(this.saleLineProps(salesTotal, topSales))
-      this.particles.push([{ date, salesTotal, transactionsTotal }, particle]);
+      //Graph lines particles
+      const salesLineParticle = new this.particleClass('rect');
+      const salesLineParticleProps = this.salesGraphLineProps(salesTotal, topSales);
+      salesLineParticle.particleProps(salesLineParticleProps);
+      this.particles.salesLines.push(salesLineParticle);
+      const dateParticle = new this.particleClass('text');
+      const dateParticleProps = this.salesGraphDateProps(date);
+      dateParticle.particleProps(dateParticleProps)
+      this.particles.dates.push(dateParticle);
+
     });
+    console.log(this.particles.dates);
   }
 
-  starterData(salesData) {
+  getHighestSales(salesData) {
     return salesData.reduce(
       (top, [date, { salesTotal, transactionsTotal }]) => {
         if (top < salesTotal) {
@@ -121,8 +143,7 @@ export default class Emitter {
       const oldZoomRatio = Math.exp(oldZoomFactor * this.zoomSpeed);
       // Calculate the change in zoom ratio
       const zoomChange = zoomRatio / oldZoomRatio;
-      this.particles.forEach((data, i) => {
-        const [salesData, particle] = data;
+      this.particles.salesLines.forEach(particle => {
         const distanceX = particle.x - this.mouseX;
         const distanceY = particle.y - this.mouseY;
         const scaledDistanceX = distanceX * zoomChange;
@@ -138,8 +159,7 @@ export default class Emitter {
   dragParticles() {
     const deltaX = this.mouseX - this.oldMouseX; // Calculate the change in mouse position since the click
     const deltaY = this.mouseY - this.oldMouseY; // Calculate the change in mouse position since the click
-    this.particles.forEach((data) => {
-      const [salesData, particle] = data;
+    this.particles.salesLines.forEach(particle => {
       particle.x += deltaX; // Update the particle's x-coordinate
       particle.y += deltaY; // Update the particle's x-coordinate
     });
@@ -148,7 +168,7 @@ export default class Emitter {
   animate() {
     requestAnimationFrame(this.animate.bind(this));
     ctx.clearRect(0, 0, innerWidth, innerHeight);
-    this.particles.forEach(([salesData, particle]) => {
+    this.particles.salesLines.forEach((particle) => {
       particle.draw();
       if (this.scroll.isActive) {
         this.scroll.isActive = false;
