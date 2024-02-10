@@ -1,18 +1,18 @@
 import { canvas, ctx } from "./salesGraphConfig.js";
-import { Util } from "./util.js";
+import DateUtil from "./dateUtil.js";
 
 export default class Emitter {
   constructor(canvas, ctx, particleClass) {
-    this.util = new Util();
+    this.util = new DateUtil();
     this.canvas = canvas;
     this.ctx = ctx;
     this.particleClass = particleClass;
     this.particles = {};
     this.lineSpacing = 0;
-    this.lineWidth = 5;
+    this.lineWidth = 10;
     this.lineHeight = 200;
     this.lineX = 0;
-    this.graphColor = "blue";
+    this.graphColor = 'blue';
     this.mouseX = 0;
     this.oldMouseX = 0;
     this.mouseY = 0;
@@ -40,7 +40,7 @@ export default class Emitter {
       x: this.lineX,
       y: this.getLineY(),
       color: this.graphColor,
-      stroke: false,
+      stroke: true,
       height: -(salesTotal / topSales) * maxHeight,
       width: this.lineWidth,
     };
@@ -50,11 +50,11 @@ export default class Emitter {
 
   salesGraphDateProps(date) {
     return {
-      fontSize: '16px',
+      fontSize: 16,
       fontFamily: 'Arial',
-      textMessage: `${this.util.getDate(date)}`,
-      x: this.lineX,
-      y: this.getLineY(),
+      textMessage: `03 May`,
+      x: this.lineX - this.lineWidth,
+      y: this.getLineY() + 50,
       color: 'green'
     }
   }
@@ -138,13 +138,13 @@ export default class Emitter {
     ) {
       const oldZoomFactor = this.zoomFactor;
       this.zoomFactor += this.scroll.direction;
-
       const zoomRatio = Math.exp(this.zoomFactor * this.zoomSpeed);
       const oldZoomRatio = Math.exp(oldZoomFactor * this.zoomSpeed);
       // Calculate the change in zoom ratio
       const zoomChange = zoomRatio / oldZoomRatio;
-      this.particles.salesLines.forEach(particle => {
-        const distanceX = particle.x - this.mouseX;
+      Object.keys(this.particles).forEach(particleGroup =>{
+        this.particles[particleGroup].forEach(particle => {
+          const distanceX = particle.x - this.mouseX;
         const distanceY = particle.y - this.mouseY;
         const scaledDistanceX = distanceX * zoomChange;
         const scaledDistanceY = distanceY * zoomChange;
@@ -152,28 +152,33 @@ export default class Emitter {
         particle.width *= zoomChange;
         // particle.y = this.mouseY + scaledDistanceY;
         // particle.height *= zoomChange;
-      });
+        })
+      })
     }
   }
 
   dragParticles() {
     const deltaX = this.mouseX - this.oldMouseX; // Calculate the change in mouse position since the click
     const deltaY = this.mouseY - this.oldMouseY; // Calculate the change in mouse position since the click
-    this.particles.salesLines.forEach(particle => {
-      particle.x += deltaX; // Update the particle's x-coordinate
+    Object.keys(this.particles).forEach(particleGroup =>{
+      this.particles[particleGroup].forEach(particle => {
+        particle.x += deltaX; // Update the particle's x-coordinate
       particle.y += deltaY; // Update the particle's x-coordinate
-    });
+      })
+    })
   }
 
   animate() {
     requestAnimationFrame(this.animate.bind(this));
     ctx.clearRect(0, 0, innerWidth, innerHeight);
-    this.particles.salesLines.forEach((particle) => {
-      particle.draw();
-      if (this.scroll.isActive) {
-        this.scroll.isActive = false;
-        this.zoom();
-      }
-    });
+    Object.keys(this.particles).forEach(particleGroup =>{
+      this.particles[particleGroup].forEach(particle => {
+        particle.draw();
+      })
+    })
+    if (this.scroll.isActive) {
+      this.scroll.isActive = false;
+      this.zoom();
+    }
   }
 }

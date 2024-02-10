@@ -24,7 +24,7 @@ export default class Particle {
       stroke: false,
       color: false,
       lineWidth: 1,
-      fontSize: '16px',
+      fontSize: 16,
       fontFamily: 'Arial',
       textMessage: '',
       strokeText: false
@@ -73,7 +73,7 @@ export default class Particle {
     ctx.beginPath();
     ctx.lineWidth = this.lineWidth;
     if (this.shape === 'text') {
-      ctx.font = `${this.fontSize} ${this.fontFamily}`;
+      ctx.font = `${this.fontSize}px ${this.fontFamily}`;
       ctx[this.strokeText ? 'strokeText' : 'fillText'](this.textMessage, this.x, this.y)
     }else {
       ctx[this.shape](...this._getPropArr());
