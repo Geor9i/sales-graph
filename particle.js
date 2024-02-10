@@ -2,7 +2,7 @@ import { ctx } from "./salesGraphConfig.js";
 
 export default class Particle {
   constructor(shape) {
-    this.typeRange = ["arc", "rect"];
+    this.typeRange = ["arc", "rect", 'text'];
     if (
       typeof shape !== "string" ||
       !this.typeRange.includes(shape.toLowerCase())
@@ -24,6 +24,10 @@ export default class Particle {
       stroke: false,
       color: false,
       lineWidth: 1,
+      fontSize: '16px',
+      fontFamily: 'Arial',
+      textMessage: '',
+      strokeText: false
     };
     const requiredProps = [
       ...this._getPropOrder(this.shape),
@@ -43,7 +47,8 @@ export default class Particle {
     const propOrder = {
       arc: ["x", "y", "radius", "startAngle", "endAngle"],
       rect: ["x", "y", "width", "height"],
-      sideValues: ["stroke", "color", "lineWidth"],
+      text: ['fontSize', 'fontFamily', 'textMessage', 'x', 'y'],
+      sideValues: ["stroke", "color", "lineWidth", "strokeText"],
     };
     return propOrder[shape];
   }
@@ -59,15 +64,20 @@ export default class Particle {
  * @param {*} props An Object containing the particle props for selected shape:
  * arc: x, y, radius, startAngle, endAngle;
  * rect: x, y, width, height;
-    include also side props:
-    stroke,
-    lineWidth,
-    color
+    - include also side props:
+      stroke,
+      lineWidth,  
+      color
  */
   draw() {
     ctx.beginPath();
     ctx.lineWidth = this.lineWidth;
-    ctx[this.shape](...this._getPropArr());
+    if (this.shape === 'text') {
+      ctx.font = `${this.fontSize} ${this.fontFamily}`;
+      ctx[this.strokeText ? 'strokeText' : 'fillText'](this.textMessage, this.x, this.y)
+    }else {
+      ctx[this.shape](...this._getPropArr());
+    }
     if (this.color) {
       ctx.fillStyle = this.color;
       ctx.fill();
