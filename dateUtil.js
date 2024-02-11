@@ -39,18 +39,18 @@ export default class DateUtil {
 
   getMonths(data, options = {}) {
     let syntaxVariations = {
-      january: ["january", "jan", 1],
-      february: ["february", "feb", 2],
-      march: ["march", "mar", 3],
-      april: ["april", "apr", 4],
-      may: ["may", 5],
-      june: ["june", "jun", 6],
-      july: ["july", "jul", 7],
-      august: ["august", "aug", 8],
-      september: ["september", "sep", "sept", 9],
-      october: ["october", "oct", 10],
-      november: ["november", "nov", 11],
-      december: ["december", "dec", 12],
+      january: ["january", "jan", "1"],
+      february: ["february", "feb", "2"],
+      march: ["march", "mar", "3"],
+      april: ["april", "apr", "4"],
+      may: ["may", "5"],
+      june: ["june", "jun", "6"],
+      july: ["july", "jul", "7"],
+      august: ["august", "aug", "8"],
+      september: ["september", "sep", "sept", "9"],
+      october: ["october", "oct", "10"],
+      november: ["november", "nov", "11"],
+      december: ["december", "dec", "12"],
     };
     if (Array.isArray(data)) {
       if (options.sort) {
@@ -69,10 +69,9 @@ export default class DateUtil {
     }
 
     let string = String(data).toLowerCase();
-
     for (let month in syntaxVariations) {
       if (syntaxVariations[month].includes(string)) {
-        return month;
+        return options.short ? month.slice(0, 3) : month;
       }
     }
   }
@@ -83,6 +82,13 @@ export default class DateUtil {
     // convert the time difference from milliseconds to days
     daysBetween = Math.ceil(daysBetween / (24 * 60 * 60 * 1000));
     return daysBetween;
+  }
+
+  getDayAndMonth(date, { short = false } = {}) {
+    const dateObj = this.op(date).format();
+    const day = dateObj.getDate(date);
+    const month = dateObj.getMonth(date);
+    return `${day} ${this.getMonths(month + 1, { short })}`;
   }
 
   /**
@@ -138,9 +144,8 @@ export default class DateUtil {
         let properties = {};
         for (let i = 0; i < arr.length; i++) {
           const day = dateStamp.getDay();
-          dateStampFormat = `${
-            weekGuide[(day === 0 ? 7 : day) - 1]
-          } <=> ${this.op(dateStamp).format()}`;
+          dateStampFormat = `${weekGuide[(day === 0 ? 7 : day) - 1]
+            } <=> ${this.op(dateStamp).format()}`;
           map.set(dateStampFormat, properties);
           dateStamp = new Date(dateStamp.setDate(dateStamp.getDate() + 1));
         }
@@ -166,9 +171,8 @@ export default class DateUtil {
       format: ({ delimiter = "/", asString = false } = {}) => {
         if (typeof this.result === "object") {
           let del = delimiter;
-          return `${this.result.getFullYear()}${del}${
-            this.result.getMonth() + 1
-          }${del}${this.result.getDate()}`;
+          return `${this.result.getFullYear()}${del}${this.result.getMonth() + 1
+            }${del}${this.result.getDate()}`;
         }
         let datePattern =
           /(?<normal>(?<day>\d{1,2})(?<d>\D+)(?<month>\d{1,2})\k<d>(?<year>\d{2,4}))|(?<reverse>(?<year1>\d{2,4})(?<d1>\D+)(?<month1>\d{1,2})\k<d1>(?<day1>\d{1,2}))/;
