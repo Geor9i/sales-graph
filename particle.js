@@ -2,7 +2,7 @@ import { ctx } from "./salesGraphConfig.js";
 
 export default class Particle {
   constructor(shape) {
-    this.typeRange = ["arc", "rect", 'text'];
+    this.typeRange = ["arc", "rect", "text", "line"];
     if (
       typeof shape !== "string" ||
       !this.typeRange.includes(shape.toLowerCase())
@@ -25,21 +25,19 @@ export default class Particle {
       color: false,
       lineWidth: 1,
       fontSize: 16,
-      fontFamily: 'Arial',
-      textMessage: '',
-      strokeText: false
+      fontFamily: "Arial",
+      textMessage: "",
+      strokeText: false,
     };
     const requiredProps = [
       ...this._getPropOrder(this.shape),
       ...this._getPropOrder("sideValues"),
     ];
-    Object.keys(baseProps).forEach((propName) => {
+    requiredProps.forEach((propName) => {
       const selectedProp = props.hasOwnProperty(propName)
         ? props[propName]
         : baseProps[propName];
-      if (requiredProps.includes(propName)) {
         this[propName] = selectedProp;
-      }
     });
   }
 
@@ -47,7 +45,8 @@ export default class Particle {
     const propOrder = {
       arc: ["x", "y", "radius", "startAngle", "endAngle"],
       rect: ["x", "y", "width", "height"],
-      text: ['fontSize', 'fontFamily', 'textMessage', 'x', 'y'],
+      text: ["fontSize", "fontFamily", "textMessage", "x", "y"],
+      line: ["lineData"],
       sideValues: ["stroke", "color", "lineWidth", "strokeText"],
     };
     return propOrder[shape];
@@ -72,10 +71,19 @@ export default class Particle {
   draw() {
     ctx.beginPath();
     ctx.lineWidth = this.lineWidth;
-    if (this.shape === 'text') {
+    if (this.shape === "text") {
       ctx.font = `${this.fontSize}px ${this.fontFamily}`;
-      ctx[this.strokeText ? 'strokeText' : 'fillText'](this.textMessage, this.x, this.y)
-    }else {
+      ctx[this.strokeText ? "strokeText" : "fillText"](
+        this.textMessage,
+        this.x,
+        this.y
+      );
+    } else if (this.shape === "line") {
+      this.lineData.forEach((data) => {
+        const { prompt, x, y } = data;
+        ctx[prompt](x, y);
+      });
+    } else {
       ctx[this.shape](...this._getPropArr());
     }
     if (this.color) {

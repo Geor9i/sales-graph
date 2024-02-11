@@ -12,7 +12,7 @@ export default class Emitter {
     this.lineWidth = 10;
     this.lineHeight = 200;
     this.lineX = 0;
-    this.graphColor = 'blue';
+    this.graphColor = "blue";
     this.mouseX = 0;
     this.oldMouseX = 0;
     this.mouseY = 0;
@@ -51,11 +51,118 @@ export default class Emitter {
   salesGraphDateProps(date) {
     return {
       fontSize: 8,
-      fontFamily: 'Arial',
+      fontFamily: "Arial",
       textMessage: this.util.getDayAndMonth(date, { short: true }),
       x: this.lineX - this.lineWidth,
       y: this.getLineY() + 20,
-      color: 'green'
+      color: "green",
+    };
+  }
+
+  dateLines(salesDataArr) {
+    const months = {};
+    const years = {};
+    const initialDate = salesDataArr.shift()[0];
+    const [initialYear, initialMonth, initialDay] = initialDate.split("/");
+    //Counters for month and year
+    months[initialMonth] = { counter: 1, startDate: initialDate, endDate: "" };
+    years[initialYear] = { counter: 1, startDate: initialDate, endDate: "" };
+    let tempDate = initialMonth;
+    let tempMonth = initialMonth;
+    let tempYear = initialYear;
+    salesDataArr.forEach(([date, { salesTotal, transactionsTotal }], i) => {
+      const [year, month, day] = date.split("/");
+      if (months.hasOwnProperty(month)) {
+        months[month].counter += 1;
+      } else {
+        months[tempMonth].endDate = tempDate;
+        tempMonth = month;
+        months[month] = { counter: 1, startDate: date, endDate: "" };
+      }
+      if (years.hasOwnProperty(year)) {
+        years[year].counter += 1;
+      } else {
+        years[tempYear].endDate = tempDate;
+        tempYear = year;
+        years[year] = { counter: 1, startDate: date, endDate: "" };
+      }
+      tempDate = date;
+      if (i === salesDataArr.length - 1) {
+        if (months[month].endDate === "") {
+          months[month].endDate = date;
+        }
+        if (years[year].endDate === "") {
+          years[year].endDate = date;
+        }
+      }
+    });
+    let monthX = this.lineX;
+    let yearX = this.lineX;
+    for (let month in months) {
+      const middle = Math.floor(months[month].counter / 2);
+      const remainder = monthX - middle;
+      const startLineStart = monthX;
+      monthX = (monthX + this.lineSpacing) * middle;
+      const startLineEnd = monthX - 1;
+      monthX += remainder / 2;
+      const endLineStart = monthX;
+      monthX = (monthX + this.lineSpacing) * middle;
+      const endLineEnd = monthX;
+      monthX += remainder / 2;
+      months[month] = {
+        ...months[month],
+        startLineStart,
+        startLineEnd,
+        endLineStart,
+        endLineEnd,
+      };
+    }
+    for (let year in years) {
+      const middle = Math.floor(years[year].counter / 2);
+      const remainder = yearX - middle;
+      const startLineStart = yearX;
+      yearX = (yearX + this.lineSpacing) * middle;
+      const startLineEnd = yearX - 1;
+      yearX += remainder / 2;
+      const endLineStart = yearX;
+      yearX = (yearX + this.lineSpacing) * middle;
+      const endLineEnd = yearX;
+      yearX += remainder / 2;
+      years[year] = {
+        ...years[year],
+        startLineStart,
+        startLineEnd,
+        endLineStart,
+        endLineEnd,
+      };
+    }
+    this.particles.monthLines = [];
+    for (let month in months) {
+      const { startLineStart, startLineEnd, endLineStart, endLineEnd } =
+        months[month];
+      const particle = new this.particleClass("line");
+      const Y = this.getLineY();
+      const lineHeight = 60;
+      let instruction1 = { prompt: "moveTo", x: startLineStart, y: Y };
+      let instruction2 = { prompt: "lineTo", x: startLineStart, y: Y + lineHeight };
+      let instruction3 = { prompt: "lineTo", x: startLineEnd, y: Y + lineHeight };
+      let instruction4 = { prompt: "lineTo", x: startLineEnd, y: Y };
+      let instruction5 = { prompt: "moveTo", x: endLineStart, y: Y };
+      let instruction6 = { prompt: "lineTo", x: endLineStart, y: Y + lineHeight };
+      let instruction7 = { prompt: "lineTo", x: endLineEnd, y: Y + lineHeight };
+      let instruction8 = { prompt: "lineTo", x: endLineEnd, y: Y };
+      const instructions = [
+        instruction1,
+        instruction2,
+        instruction3,
+        instruction4,
+        instruction5,
+        instruction6,
+        instruction7,
+        instruction8,
+      ];
+      particle.particleProps({lineData: instructions, stroke: true});
+      this.particles.monthLines.push(particle);
     }
   }
 
@@ -104,18 +211,22 @@ export default class Emitter {
     }
     this.particles.salesLines = [];
     this.particles.dates = [];
+    this.dateLines(salesDataArr);
     salesDataArr.forEach(([date, { salesTotal, transactionsTotal }]) => {
       //Graph lines particles
-      const salesLineParticle = new this.particleClass('rect');
-      const salesLineParticleProps = this.salesGraphLineProps(salesTotal, topSales);
+      const salesLineParticle = new this.particleClass("rect");
+      const salesLineParticleProps = this.salesGraphLineProps(
+        salesTotal,
+        topSales
+      );
       salesLineParticle.particleProps(salesLineParticleProps);
       this.particles.salesLines.push(salesLineParticle);
-      const dateParticle = new this.particleClass('text');
+      const dateParticle = new this.particleClass("text");
       const dateParticleProps = this.salesGraphDateProps(date);
-      dateParticle.particleProps(dateParticleProps)
+      dateParticle.particleProps(dateParticleProps);
       this.particles.dates.push(dateParticle);
-
     });
+    console.log(this.particles);
   }
 
   getHighestSales(salesData) {
@@ -141,8 +252,8 @@ export default class Emitter {
       const oldZoomRatio = Math.exp(oldZoomFactor * this.zoomSpeed);
       // Calculate the change in zoom ratio
       const zoomChange = zoomRatio / oldZoomRatio;
-      Object.keys(this.particles).forEach(particleGroup => {
-        this.particles[particleGroup].forEach(particle => {
+      Object.keys(this.particles).forEach((particleGroup) => {
+        this.particles[particleGroup].forEach((particle) => {
           const distanceX = particle.x - this.mouseX;
           const distanceY = particle.y - this.mouseY;
           const scaledDistanceX = distanceX * zoomChange;
@@ -151,30 +262,30 @@ export default class Emitter {
           particle.width *= zoomChange;
           // particle.y = this.mouseY + scaledDistanceY;
           // particle.height *= zoomChange;
-        })
-      })
+        });
+      });
     }
   }
 
   dragParticles() {
     const deltaX = this.mouseX - this.oldMouseX; // Calculate the change in mouse position since the click
     const deltaY = this.mouseY - this.oldMouseY; // Calculate the change in mouse position since the click
-    Object.keys(this.particles).forEach(particleGroup => {
-      this.particles[particleGroup].forEach(particle => {
+    Object.keys(this.particles).forEach((particleGroup) => {
+      this.particles[particleGroup].forEach((particle) => {
         particle.x += deltaX; // Update the particle's x-coordinate
         particle.y += deltaY; // Update the particle's x-coordinate
-      })
-    })
+      });
+    });
   }
 
   animate() {
     requestAnimationFrame(this.animate.bind(this));
     ctx.clearRect(0, 0, innerWidth, innerHeight);
-    Object.keys(this.particles).forEach(particleGroup => {
-      this.particles[particleGroup].forEach(particle => {
+    Object.keys(this.particles).forEach((particleGroup) => {
+      this.particles[particleGroup].forEach((particle) => {
         particle.draw();
-      })
-    })
+      });
+    });
     if (this.scroll.isActive) {
       this.scroll.isActive = false;
       this.zoom();
