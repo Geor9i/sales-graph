@@ -50,11 +50,11 @@ export default class Emitter {
 
   salesGraphDateProps(date) {
     return {
-      fontSize: 16,
+      fontSize: 8,
       fontFamily: 'Arial',
-      textMessage: `03 May`,
+      textMessage: this.util.getDayAndMonth(date, { short: true }),
       x: this.lineX - this.lineWidth,
-      y: this.getLineY() + 50,
+      y: this.getLineY() + 20,
       color: 'green'
     }
   }
@@ -116,7 +116,6 @@ export default class Emitter {
       this.particles.dates.push(dateParticle);
 
     });
-    console.log(this.particles.dates);
   }
 
   getHighestSales(salesData) {
@@ -142,16 +141,16 @@ export default class Emitter {
       const oldZoomRatio = Math.exp(oldZoomFactor * this.zoomSpeed);
       // Calculate the change in zoom ratio
       const zoomChange = zoomRatio / oldZoomRatio;
-      Object.keys(this.particles).forEach(particleGroup =>{
+      Object.keys(this.particles).forEach(particleGroup => {
         this.particles[particleGroup].forEach(particle => {
           const distanceX = particle.x - this.mouseX;
-        const distanceY = particle.y - this.mouseY;
-        const scaledDistanceX = distanceX * zoomChange;
-        const scaledDistanceY = distanceY * zoomChange;
-        particle.x = this.mouseX + scaledDistanceX;
-        particle.width *= zoomChange;
-        // particle.y = this.mouseY + scaledDistanceY;
-        // particle.height *= zoomChange;
+          const distanceY = particle.y - this.mouseY;
+          const scaledDistanceX = distanceX * zoomChange;
+          const scaledDistanceY = distanceY * zoomChange;
+          particle.x = this.mouseX + scaledDistanceX;
+          particle.width *= zoomChange;
+          // particle.y = this.mouseY + scaledDistanceY;
+          // particle.height *= zoomChange;
         })
       })
     }
@@ -160,10 +159,10 @@ export default class Emitter {
   dragParticles() {
     const deltaX = this.mouseX - this.oldMouseX; // Calculate the change in mouse position since the click
     const deltaY = this.mouseY - this.oldMouseY; // Calculate the change in mouse position since the click
-    Object.keys(this.particles).forEach(particleGroup =>{
+    Object.keys(this.particles).forEach(particleGroup => {
       this.particles[particleGroup].forEach(particle => {
         particle.x += deltaX; // Update the particle's x-coordinate
-      particle.y += deltaY; // Update the particle's x-coordinate
+        particle.y += deltaY; // Update the particle's x-coordinate
       })
     })
   }
@@ -171,7 +170,7 @@ export default class Emitter {
   animate() {
     requestAnimationFrame(this.animate.bind(this));
     ctx.clearRect(0, 0, innerWidth, innerHeight);
-    Object.keys(this.particles).forEach(particleGroup =>{
+    Object.keys(this.particles).forEach(particleGroup => {
       this.particles[particleGroup].forEach(particle => {
         particle.draw();
       })
